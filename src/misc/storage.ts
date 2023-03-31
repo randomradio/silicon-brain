@@ -7,6 +7,10 @@ export interface ChatSession {
     content: string;
     timestamp: number;
   }>;
+  setting: {
+    model: string;
+    maxToken: number;
+  };
   summary: {
     title: string;
     content: string;
@@ -20,9 +24,38 @@ export interface UserSettings {
   max_token_count: number;
 }
 
+export const modelOptions = [
+  {
+    label: "gpt-3",
+    value: "gpt3",
+    disabled: false,
+  },
+  {
+    label: "gpt-3.5-turbo",
+    value: "gpt-3.5-turbo",
+    disabled: false,
+  },
+  {
+    label: "gpt-4",
+    value: "gpt-4",
+    disabled: false,
+  },
+  {
+    label: "gpt-4-0314",
+    value: "gpt-4-0314",
+    disabled: false,
+  },
+  {
+    label: "gpt-4-32k",
+    value: "gpt-4-32k",
+    disabled: false,
+  },
+];
+
 export const defaultData: ChatSession = {
   uid: uuid4(),
   history: [],
+  setting: { model: "", maxToken: 4096 },
   summary: {
     title: "Start Journey",
     content: "Answer is 42",

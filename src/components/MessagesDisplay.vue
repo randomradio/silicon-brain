@@ -1,9 +1,13 @@
 <template>
-  <div class="messages-display">
+  <div class="messages-display" :class="{ 'hidden': !started }">
+    <div class="message message-ai" v-if="streamingResponse">
+      <span v-html="formattedStreamingResponse"></span>
+    </div>
     <div class="message" :class="{ 'message-user': message.role === 'user', 'message-ai': message.role === 'ai' }"
       v-for="(message, index) in reversedMessages" :key="index">
       <!-- <strong>{{ message.role === 'user' ? 'User' : 'AI' }}:</strong>  -->
-      {{ message.content }}
+      <p v-if="message.role == 'user'">{{ message.content }}</p>
+      <p v-if="message.role == 'ai'"><span v-html="message.content"></span></p>
     </div>
   </div>
 </template>
@@ -16,10 +20,22 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  streamingMessage: {
+  streamingResponse: {
     type: String,
     default: "",
   },
+  started: {
+    type: Boolean,
+    default: false,
+  },
+  responseDone: {
+    type: Boolean,
+    default: true,
+  }
+});
+
+const formattedStreamingResponse = computed(() => {
+  return props.streamingResponse.replace(/\n/g, '<br>');
 });
 
 const selectedSessionRef = ref(props.selectedSession);
@@ -28,6 +44,14 @@ watch(
   () => props.selectedSession,
   (newSelectedSession) => {
     selectedSessionRef.value = newSelectedSession;
+  },
+  { deep: true }
+);
+
+watch(
+  () => props.streamingResponse,
+  (newSteamingResponse) => {
+    ref(props.streamingResponse).value = newSteamingResponse;
   },
   { deep: true }
 );
@@ -53,6 +77,12 @@ export default {
   overflow-y: auto;
   padding: 1rem;
   margin-bottom: 1rem;
+  scrollbar-width: none; // For Firefox
+  -ms-overflow-style: none; // For Internet Explorer and Edge
+
+  &::-webkit-scrollbar {
+    display: none; // For Chrome, Safari, and Opera
+  }
 }
 
 .message {
