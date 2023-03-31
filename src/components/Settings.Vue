@@ -68,9 +68,16 @@
 <script lang="ts">
 import { ref, watch } from "vue";
 import { UserSettings } from "../misc/storage";
+import { NForm, NFormItem, NInput, NSlider } from "naive-ui";
 
 export default ({
   name: "Settings",
+  components: {
+    NForm,
+    NFormItem,
+    NInput,
+    NSlider
+  },
   props: {
     settings: {
       type: Object as () => UserSettings,
