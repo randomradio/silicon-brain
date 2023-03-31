@@ -11,14 +11,18 @@
                     <button class="add-session button is-primary is-light" @click="addNewSession">
                         <font-awesome-icon icon="fa-solid fa-user-plus" />
                     </button>
+                    <n-list hoverable clickable>
+                        <n-list-item v-for="session in chatSessions" :key="session.uid" @click="selectSession(session.uid)">
+                            <a :class="{ 'is-active': selectedSession.uid == session.uid }">{{
+                                session.summary.title }}
+                            </a>
+                            <i @click.stop="removeSession(session.uid)"><font-awesome-icon
+                                    icon='fa-solid fa-delete-left' /></i>
+                        </n-list-item>
+                    </n-list>
                     <ul class="chat-session menu-list">
-                        <li v-for="session in chatSessions" :key="session.uid" @click="selectSession(session.uid)">
+                        <li>
                             <div class="session-item">
-                                <a :class="{ 'is-active': selectedSession.uid == session.uid }">{{
-                                    session.summary.title }}
-                                </a>
-                                <i @click.stop="removeSession(session.uid)"><font-awesome-icon
-                                        icon='fa-solid fa-delete-left' /></i>
                             </div>
                         </li>
                     </ul>
@@ -65,9 +69,8 @@ import { defaultData, saveChatSessions, loadChatSessions, loadSettings, saveSett
 import { NewChain } from '../api/messaging';
 import { ConversationChain } from 'langchain/chains';
 
-import { useMessage } from 'naive-ui'
+import { useMessage, NList, NListItem, NThing } from 'naive-ui'
 import uuid4 from 'uuid4';
-import { log } from 'console';
 import { Summarize } from '../api/summary';
 
 const message = useMessage()
@@ -80,6 +83,9 @@ export default {
     name: 'ChatPanel',
     components: {
         MessagesDisplay,
+        NList,
+        NListItem,
+        NThing,
     },
     data() {
         const chatSessions = loadChatSessions();
@@ -145,8 +151,14 @@ export default {
             this.showSettings = true;
         },
         onKeyDown(event: KeyboardEvent) {
+            console.log(event)
             if (event.key === 'Enter' && event.ctrlKey) {
-                this.sendMessage();
+                if (this.currentMessage.trim() != "") {
+                    this.sendMessage();
+                } else {
+                    window.$message.warning('Forgot to say something 🤔')
+                    return
+                }
             }
         },
         handleMessageCallback(token: string, end: boolean, err?: Error) {
@@ -163,7 +175,9 @@ export default {
                     role: "ai",
                     content: this.streamingResponse
                 })
+                // reset chat content
                 this.streamingResponse = ''
+                this.currentMessage = '';
                 saveChatSessions(this.chatSessions);
             }
         },
@@ -181,8 +195,19 @@ export default {
                     return
                 }
             }
-            const summary = await Summarize(this.settings.openai_api_key, this.settings.model, this.selectedSession);
+            let new_lines = "";
+            this.selectedSession.history.forEach((conv) => {
+                new_lines += `${conv.role}:${conv.content}\n`;
+            });
+            if (new_lines.trim() == "" || this.selectedSession.summary.content.trim() == "") {
+                window.$message.error(
+                    'Start conversation to generate summary.',
+                    { duration: 2000 }
+                )
+                return
+            }
 
+            const summary = await Summarize(this.settings.openai_api_key, this.settings.model, new_lines, this.selectedSession.summary.content);
             this.selectedSession.summary = summary;
         },
         async sendMessage() {
@@ -277,6 +302,7 @@ export default {
 .add-session {
     font-size: 10px;
     width: 100%;
+    margin-bottom: 1rem;
 }
 
 .middle-column {
