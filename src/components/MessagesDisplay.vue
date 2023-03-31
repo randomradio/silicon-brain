@@ -1,28 +1,46 @@
-<!-- MessagesDisplay.vue -->
 <template>
   <div class="messages-display">
-    <div class="message" v-for="(message, index) in messages" :key="index">
-      <strong>{{ message.sender }}:</strong> {{ message.content }}
+    <div class="message" v-for="(message, index) in reversedMessages" :key="index">
+      <strong>{{ message.role === 'user' ? 'User' : 'AI' }}:</strong> {{ message.content }}
     </div>
   </div>
-  <div class="input-section">
-    <input type="text" class="message-input" placeholder="Type your message..." />
-    <button class="button is-light" @click="$emit('show-summary')">🧠Summary</button>
-  </div>
 </template>
-  
+
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-const messages = ref([
-  { sender: 'User', content: 'What is the capital of France?' },
-  { sender: 'AI', content: 'The capital of France is Paris.' },
-  { sender: 'User', content: 'What is the population of Paris?' },
-  { sender: 'AI', content: 'As of my knowledge cutoff in September 2021, the population of Paris was approximately 2.1 million people. However, population numbers change over time, so I recommend checking a current and reliable source for the most accurate and up-to-date information.' },
-]);
+const props = defineProps({
+  selectedSession: {
+    type: Object,
+    required: true,
+  },
+  streamingMessage: {
+    type: String,
+    default: "",
+  },
+});
 
+const selectedSessionRef = ref(props.selectedSession);
+
+watch(
+  () => props.selectedSession,
+  (newSelectedSession) => {
+    selectedSessionRef.value = newSelectedSession;
+  },
+  { deep: true }
+);
+
+const reversedMessages = computed(() => {
+  return [...selectedSessionRef.value.history].reverse();
+});
 </script>
-  
+
+<script lang="ts">
+export default {
+  name: "MessagesDisplay",
+};
+</script>
+
 <style lang="scss" scoped>
 .messages-display {
   display: flex;
@@ -36,36 +54,10 @@ const messages = ref([
 }
 
 .message {
+  margin-bottom: 10px;
+}
+
+.message:first-child {
   margin-bottom: 1rem;
 }
-
-.input-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-}
-
-.message-input {
-  flex-grow: 1;
-  margin-right: 1rem;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.summary-button {
-  padding: 0.5rem 1rem;
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-}
 </style>
- 
-<script lang="ts">
-export default {
-  name: 'MessagesDisplay',
-
-}
-</script>
