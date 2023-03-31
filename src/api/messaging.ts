@@ -4,7 +4,13 @@ import {
   LangChainTracer,
   ConsoleCallbackHandler,
 } from "langchain/callbacks";
-import { BufferWindowMemory } from "langchain/memory";
+import { BufferMemory } from "langchain/memory";
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  SystemMessagePromptTemplate,
+  MessagesPlaceholder,
+} from "langchain/prompts";
 import { ConversationChain } from "langchain/chains";
 
 export const NewChain = async (
@@ -32,8 +38,22 @@ export const NewChain = async (
       },
     }),
   });
-  const memory = new BufferWindowMemory({ k: 10 }); // todo: this should be adjusted based on user token limit settinquesiton: string, uuid: stringg
-  const chain = new ConversationChain({ llm: model, memory: memory });
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    SystemMessagePromptTemplate.fromTemplate(
+      "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know."
+    ),
+    new MessagesPlaceholder("history"),
+    HumanMessagePromptTemplate.fromTemplate("{input}"),
+  ]);
+  const memory = new BufferMemory({
+    returnMessages: true,
+    memoryKey: "history",
+  }); // todo: this should be adjusted based on user token limit settinquesiton: string, uuid: stringg
+  const chain = new ConversationChain({
+    llm: model,
+    prompt: chatPrompt,
+    memory: memory,
+  });
 
   return chain;
 };

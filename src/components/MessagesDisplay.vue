@@ -1,7 +1,9 @@
 <template>
   <div class="messages-display">
-    <div class="message" v-for="(message, index) in reversedMessages" :key="index">
-      <strong>{{ message.role === 'user' ? 'User' : 'AI' }}:</strong> {{ message.content }}
+    <div class="message" :class="{ 'message-user': message.role === 'user', 'message-ai': message.role === 'ai' }"
+      v-for="(message, index) in reversedMessages" :key="index">
+      <!-- <strong>{{ message.role === 'user' ? 'User' : 'AI' }}:</strong>  -->
+      {{ message.content }}
     </div>
   </div>
 </template>
@@ -54,10 +56,25 @@ export default {
 }
 
 .message {
-  margin-bottom: 10px;
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  width: fit-content;
+
+  &:first-child {
+    margin-bottom: 1rem;
+  }
 }
 
-.message:first-child {
-  margin-bottom: 1rem;
+.message-user {
+  align-self: flex-end;
+  background-color: #e5e9f0;
+}
+
+.message-ai {
+  align-self: flex-start;
+  background-color: #f0e5e5;
 }
 </style>

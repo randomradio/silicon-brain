@@ -44,6 +44,6 @@ export const Summarize = async (
   const chain = new LLMChain({ llm: model, prompt: SUMMARY_PROMPT });
 
   const res = await chain.call({ summary, new_lines });
-
+  console.log(res["text"])
   return res["text"];
 };

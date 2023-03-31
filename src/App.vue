@@ -3,20 +3,22 @@
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
 import { de } from "date-fns/locale";
 import ChatPanel from "./components/ChatPanel.vue";
-import { NMessageProvider } from "naive-ui";
+import { NMessageProvider, NLoadingBarProvider } from "naive-ui";
 </script>
 
 <template>
-  <n-message-provider>
-    <main>
-      <ChatPanel />
-    </main>
-  </n-message-provider>
+  <n-loading-bar-provider>
+    <n-message-provider>
+      <main>
+        <ChatPanel />
+      </main>
+    </n-message-provider>
+  </n-loading-bar-provider>
 </template>
 
 <script lang="ts">
 export default {
-  components: { ChatPanel, NMessageProvider },
+  components: { ChatPanel, NMessageProvider, NLoadingBarProvider },
 }
 </script>
 
