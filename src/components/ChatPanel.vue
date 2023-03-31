@@ -54,6 +54,8 @@
         <div class="right-column" v-show="showRightColumn">
             <!-- Chat session summary goes here -->
             <button class="button is-primary is-light" @click="runSummarize">🤖💭Summarize</button>
+            <n-divider></n-divider>
+            <n-card>{{ selectedSession.summary.content }}</n-card>
         </div>
         <Modal :isOpen="showSettings">
             <Settings v-bind:settings="settings" @update-settings="updateSettings" @close="closeSettings" />
@@ -69,12 +71,15 @@ import { defaultData, saveChatSessions, loadChatSessions, loadSettings, saveSett
 import { NewChain } from '../api/messaging';
 import { ConversationChain } from 'langchain/chains';
 
-import { useMessage, NList, NListItem, NThing } from 'naive-ui'
-import uuid4 from 'uuid4';
 import { Summarize } from '../api/summary';
+
+import { useMessage, NList, NListItem, NThing, NCard,NDivider } from 'naive-ui'
+import { useLoadingBar } from 'naive-ui'
+import uuid4 from 'uuid4';
 
 const message = useMessage()
 window.$message = useMessage()
+window.$loadingBar = useLoadingBar()
 </script>
 
 <script lang="ts">
@@ -86,6 +91,8 @@ export default {
         NList,
         NListItem,
         NThing,
+        NCard,
+        NDivider,
     },
     data() {
         const chatSessions = loadChatSessions();
@@ -151,7 +158,6 @@ export default {
             this.showSettings = true;
         },
         onKeyDown(event: KeyboardEvent) {
-            console.log(event)
             if (event.key === 'Enter' && event.ctrlKey) {
                 if (this.currentMessage.trim() != "") {
                     this.sendMessage();
@@ -177,11 +183,12 @@ export default {
                 })
                 // reset chat content
                 this.streamingResponse = ''
-                this.currentMessage = '';
                 saveChatSessions(this.chatSessions);
+                window.$loadingBar.finish()
             }
         },
         async runSummarize() {
+            window.$loadingBar.start()
             if (this.chain == null) {
                 // Start new Chain;
                 if (this.settings.openai_api_key != "") {
@@ -199,7 +206,7 @@ export default {
             this.selectedSession.history.forEach((conv) => {
                 new_lines += `${conv.role}:${conv.content}\n`;
             });
-            if (new_lines.trim() == "" || this.selectedSession.summary.content.trim() == "") {
+            if (new_lines.trim() == "" && this.selectedSession.summary.content.trim() == "") {
                 window.$message.error(
                     'Start conversation to generate summary.',
                     { duration: 2000 }
@@ -208,7 +215,10 @@ export default {
             }
 
             const summary = await Summarize(this.settings.openai_api_key, this.settings.model, new_lines, this.selectedSession.summary.content);
-            this.selectedSession.summary = summary;
+            console.log(summary);
+            
+            this.selectedSession.summary.content = summary;
+            window.$loadingBar.finish()
         },
         async sendMessage() {
             if (this.chain == null) {
@@ -225,14 +235,20 @@ export default {
                 }
             }
 
-            console.log(this.currentMessage);
-            this.selectedSession.history.push({
+            window.$loadingBar.start()
+            const messageToSend = {
                 timestamp: Date.now(),
                 role: "user",
                 content: this.currentMessage
-            });
+            }
+            this.selectedSession.history.push(<{
+                role: "user" | "ai";
+                content: string;
+                timestamp: number;
+            }>messageToSend);
             saveChatSessions(this.chatSessions);
-            (await this.chain).call({ input: this.currentMessage })
+            (await this.chain).call({ input: messageToSend.content })
+            this.currentMessage = '';
         }
     },
 };
