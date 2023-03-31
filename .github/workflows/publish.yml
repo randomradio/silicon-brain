@@ -1,8 +1,7 @@
 name: 'publish'
 on:
   push:
-    branches:
-      - main
+    tags: [ v\d+\.\d+\.\d+ ]
 
 jobs:
   publish-tauri:
@@ -51,10 +50,10 @@ jobs:
       - name: install frontend dependencies
         run: yarn install # change this to npm or pnpm depending on which one you use
 
-#       - name: Change Version
-#         env:
-#           VERSION: "${{ steps.get_version.outputs.version-without-v }}"
-#         run: make change-version
+      - name: Change Version
+        env:
+          VERSION: "${{ steps.get_version.outputs.version-without-v }}"
+        run: make change-version
 
       - uses: tauri-apps/tauri-action@dev
         env:
@@ -68,8 +67,8 @@ jobs:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          tagName: Chatbox-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
-          releaseName: 'Chatbox v__VERSION__'
+          tagName: SiliconBrain-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
+          releaseName: 'SiliconBrain v__VERSION__'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
