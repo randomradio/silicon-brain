@@ -36,14 +36,10 @@ const SUMMARY_PROMPT = new PromptTemplate({
 export const Summarize = async (
   openAIApiKey: string,
   modelName: string,
-  session: ChatSession
+  new_lines: string,
+  summary: string,
 ) => {
   /* Initialize the LLM to use to summarize the conversation */
-  let new_lines = "";
-  session.history.forEach((conv) => {
-    new_lines += `${conv.role}:${conv.content}\n`;
-  });
-  const summary = session.summary;
   const model = new OpenAI({ openAIApiKey, temperature: 0, modelName });
   const chain = new LLMChain({ llm: model, prompt: SUMMARY_PROMPT });
 
